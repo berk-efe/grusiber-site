@@ -1,7 +1,8 @@
 "use client";
 
+import type { ElementType } from "react";
+
 import {
-  ElementType,
   useEffect,
   useRef,
   useState,
@@ -113,7 +114,8 @@ const TextType = ({
   useEffect(() => {
     if (!isVisible) return;
 
-    let timeout: NodeJS.Timeout;
+    // i had to change this from NodeJS.Timeout to number
+    let timeout: number;
     const currentText = textArray[currentTextIndex];
     const processedText = reverseMode
       ? currentText.split("").reverse().join("")

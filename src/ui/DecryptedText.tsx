@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { motion, HTMLMotionProps } from "motion/react";
+import { motion } from "motion/react";
+
+import type { HTMLMotionProps } from "framer-motion";
 
 interface DecryptedTextProps extends HTMLMotionProps<"span"> {
   text: string;
@@ -39,7 +41,8 @@ export default function DecryptedText({
   const containerRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    // i had to change this from NodeJS.Timeout to number
+    let interval: number;
     let currentIteration = 0;
 
     const getNextIndex = (revealedSet: Set<number>): number => {
