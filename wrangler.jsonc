@@ -1,0 +1,10 @@
+{
+  // Cloudflare Workers static assets config. `npm run deploy` builds and uploads dist/.
+  "name": "grusiber-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Serve index.html for unknown paths so React Router handles /maintenance etc.
+    "not_found_handling": "single-page-application"
+  }
+}

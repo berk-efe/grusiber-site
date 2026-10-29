@@ -1,0 +1,51 @@
+/* IBM VGA 8x16, the same glyphs as the kernel's built-in console font.
+   From The Ultimate Oldschool PC Font Pack by VileR, CC BY-SA 4.0 (int10h.org). */
+@font-face {
+  font-family: 'VGA';
+  src: url('/fonts/WebPlus_IBM_VGA_8x16.woff') format('woff');
+  font-display: block;
+}
+
+/* Linux VT default palette */
+.tty {
+  --vt-fg: #aaaaaa;
+  --vt-white: #ffffff;
+  --vt-green: #00aa00;
+  --vt-cyan: #55ffff;
+
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: grid;
+  place-items: center;
+  cursor: none;
+  user-select: none;
+}
+
+/* 128x48 cells at 8x16 px, scaled to fit the viewport */
+.tty-screen {
+  --cell: min(calc(100vw / 64), calc(100vh / 48));
+  font-family: 'VGA', monospace;
+  font-size: var(--cell);
+  line-height: 1;
+  width: calc(var(--cell) * 64);
+  height: calc(var(--cell) * 48);
+  color: var(--vt-fg);
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+  display: flex;
+  flex-direction: column;
+}
+
+.tty-screen.bottom { justify-content: flex-end; }
+.tty-screen > div { flex: none; }
+
+.tty .green { color: var(--vt-green); }
+.tty .hi { color: var(--vt-white); }
+.tty .cyan { color: var(--vt-cyan); }
+
+.grub-entry { cursor: pointer; }
+.grub-hl { background: var(--vt-fg); color: #000; }

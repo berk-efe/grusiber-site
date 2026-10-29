@@ -1,0 +1,173 @@
+:root {
+  --bg: #000;
+  --fg: #c8ffd4;
+  --accent: #00ff9c;
+  --accent-2: #ff2bd6;
+  --dim: #3f6b52;
+}
+
+.warn {
+  --fg: #ffe9c2;
+  --accent: #ffb000;
+  --accent-2: #ff3b3b;
+  --dim: #6b5a3f;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--accent); color: #000; }
+
+.screen {
+  min-height: 100%;
+  display: flex;
+  padding: 24px;
+  color: var(--fg);
+}
+
+.frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.topbar, .bottombar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.topbar { color: var(--accent); }
+.bottombar { margin-top: auto; padding-top: 32px; }
+
+.dim { color: var(--dim); }
+.accent { color: var(--accent); }
+
+
+.hero {
+  margin: auto 0;
+  padding: 48px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.code {
+  color: var(--accent-2);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+}
+
+h1 {
+  font-family: 'VT323', monospace;
+  font-weight: 400;
+  font-size: clamp(56px, 12vw, 140px);
+  line-height: 0.9;
+  color: var(--accent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.tagline {
+  font-size: clamp(14px, 2vw, 18px);
+  color: var(--fg);
+}
+
+.enter {
+  align-self: flex-start;
+  margin-top: 16px;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font: inherit;
+  letter-spacing: 0.2em;
+  padding: 12px 22px;
+  cursor: pointer;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.enter:hover, .enter:focus-visible {
+  background: var(--accent);
+  color: #000;
+  outline: none;
+  animation: none;
+}
+
+.cursor { animation: blink 1s steps(1) infinite; color: var(--accent); }
+.blink { animation: blink 1.2s steps(1) infinite; }
+
+.fade-in { animation: fade 0.6s ease-out both; }
+
+/* Glitch: two offset copies of the text flicker behind the original. */
+.glitch { position: relative; }
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.glitch::before {
+  color: var(--accent-2);
+  animation: glitch-a 3.2s infinite steps(1);
+  mix-blend-mode: screen;
+}
+.glitch::after {
+  color: #00e5ff;
+  animation: glitch-b 2.7s infinite steps(1);
+  mix-blend-mode: screen;
+}
+
+.progress {
+  width: min(420px, 100%);
+  height: 6px;
+  border: 1px solid var(--dim);
+  overflow: hidden;
+  margin-top: 12px;
+}
+.progress-bar {
+  height: 100%;
+  width: 35%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: scan 1.8s ease-in-out infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } }
+@keyframes pulse { 50% { box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 60%, transparent); } }
+@keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+@keyframes glitch-a {
+  0%, 88%, 100% { opacity: 0; transform: none; clip-path: none; }
+  89% { opacity: 1; transform: translate(-3px, 1px); clip-path: inset(10% 0 60% 0); }
+  92% { opacity: 1; transform: translate(3px, -1px); clip-path: inset(55% 0 20% 0); }
+  95% { opacity: 1; transform: translate(-2px, 0); clip-path: inset(30% 0 40% 0); }
+}
+@keyframes glitch-b {
+  0%, 84%, 100% { opacity: 0; transform: none; clip-path: none; }
+  85% { opacity: 1; transform: translate(3px, 0); clip-path: inset(65% 0 5% 0); }
+  90% { opacity: 1; transform: translate(-3px, 2px); clip-path: inset(5% 0 75% 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+}
+
+@media (max-width: 520px) {
+  .screen { padding: 16px; }
+  .topbar span:last-child { display: none; }
+}
