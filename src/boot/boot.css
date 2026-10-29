@@ -47,5 +47,3 @@
 .tty .hi { color: var(--vt-white); }
 .tty .cyan { color: var(--vt-cyan); }
 
-.grub-entry { cursor: pointer; }
-.grub-hl { background: var(--vt-fg); color: #000; }

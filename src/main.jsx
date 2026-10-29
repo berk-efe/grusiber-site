@@ -5,14 +5,23 @@ import Home from './pages/Home.jsx'
 import Maintenance from './pages/Maintenance.jsx'
 import './index.css'
 
+// Set in .env.production on the prod branch while the site isn't live yet.
+const MAINTENANCE = import.meta.env.VITE_MAINTENANCE === 'true'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/maintenance" element={<Maintenance />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {MAINTENANCE ? (
+        <Routes>
+          <Route path="*" element={<Maintenance />} />
+        </Routes>
+      ) : (
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/maintenance" element={<Maintenance />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      )}
     </BrowserRouter>
   </StrictMode>,
 )

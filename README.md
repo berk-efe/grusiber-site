@@ -23,3 +23,10 @@ after editing the script. Press Esc or double click to skip it.
 
 Console font: IBM VGA 8x16 from [The Ultimate Oldschool PC Font Pack](https://int10h.org/oldschool-pc-fonts/)
 by VileR, licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+
+## Branches
+
+- `dev`: the work-in-progress site.
+- `prod`: what the live domain serves. While `prod` has a `.env.production` file with
+  `VITE_MAINTENANCE=true`, every URL shows the maintenance page. To launch the real site,
+  delete that file on `prod`. Merging `dev` into `prod` doesn't touch it.

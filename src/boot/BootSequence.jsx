@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import BOOTLOG from './bootlog.json'
 import './boot.css'
 
 // The efifb console of the source machine: 1024x768 with an 8x16 font.
-const COLS = 128
 const ROWS = 48
 
-const FIRMWARE_MS = 900
-const GRUB_TIMEOUT = 5 // GRUB_TIMEOUT in Arch's /etc/default/grub
-const INITRD_AFTER_MS = 650 // "Loading initial ramdisk ..." follows the kernel image
-const KERNEL_AFTER_MS = 1400
+const FIRMWARE_MS = 600
+const INITRD_AFTER_MS = 200 // "Loading initial ramdisk ..." follows the kernel image
+const KERNEL_AFTER_MS = 450
+// The screen shows nothing new until fbcon takes over, so skip ahead to just
+// before that instead of sitting on GRUB's last words.
+const KERNEL_SKIP_TO = BOOTLOG.find((e) => e.screen).t - 0.25
 // fbcon on efifb redraws the whole screen for every scroll ("scrolling: redraw"),
 // and printk waits for the console, so output can't come faster than this.
 const MS_PER_LINE = 0.45
@@ -17,16 +18,11 @@ const DM_HANDOFF_MS = 250 // last status line -> display manager grabs the VT
 const BLANK_MS = 900
 
 const SCREEN_ON = BOOTLOG.findIndex((e) => e.screen)
-const ENTRIES = ['Arch Linux', 'Advanced options for Arch Linux', 'UEFI Firmware Settings']
 
 export default function BootSequence({ onDone }) {
   const [phase, setPhase] = useState('firmware')
-  const [selected, setSelected] = useState(0)
-  const [timeout, setTimeoutLeft] = useState(GRUB_TIMEOUT)
   const [loaderLines, setLoaderLines] = useState(0)
   const [shown, setShown] = useState(0)
-
-  const boot = useCallback(() => setPhase('loader'), [])
 
   // Esc or double click skips the whole thing.
   useEffect(() => {
@@ -39,34 +35,12 @@ export default function BootSequence({ onDone }) {
     }
   }, [onDone])
 
+  // GRUB boots the default entry straight away (no menu).
   useEffect(() => {
     if (phase !== 'firmware') return
-    const t = setTimeout(() => setPhase('grub'), FIRMWARE_MS)
+    const t = setTimeout(() => setPhase('loader'), FIRMWARE_MS)
     return () => clearTimeout(t)
   }, [phase])
-
-  // GRUB: count down, arrows move the highlight and cancel the timeout.
-  useEffect(() => {
-    if (phase !== 'grub') return
-    const onKey = (e) => {
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        e.preventDefault()
-        setTimeoutLeft(null)
-        setSelected((s) => (s + (e.key === 'ArrowUp' ? ENTRIES.length - 1 : 1)) % ENTRIES.length)
-      } else if (e.key === 'Enter') {
-        boot()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [phase, boot])
-
-  useEffect(() => {
-    if (phase !== 'grub' || timeout === null) return
-    if (timeout === 0) return boot()
-    const t = setTimeout(() => setTimeoutLeft((n) => n - 1), 1000)
-    return () => clearTimeout(t)
-  }, [phase, timeout, boot])
 
   useEffect(() => {
     if (phase !== 'loader') return
@@ -81,7 +55,7 @@ export default function BootSequence({ onDone }) {
   useEffect(() => {
     if (phase !== 'kernel') return
     let last = performance.now()
-    let clock = 0 // seconds since the kernel started
+    let clock = KERNEL_SKIP_TO // seconds since the kernel started
     let count = 0
     let budget = 0
 
@@ -122,9 +96,7 @@ export default function BootSequence({ onDone }) {
   }, [phase, onDone])
 
   let body = null
-  if (phase === 'grub') {
-    body = <Grub selected={selected} timeout={timeout} onPick={(i) => (setSelected(i), boot())} />
-  } else if (phase === 'loader' || (phase === 'kernel' && shown <= SCREEN_ON)) {
+  if (phase === 'loader' || (phase === 'kernel' && shown <= SCREEN_ON)) {
     body = (
       <>
         <div>Loading Linux linux ...</div>
@@ -165,36 +137,4 @@ function Line({ e }) {
     default:
       return <div>{e.text}</div>
   }
-}
-
-// GRUB 2.06 menu on gfxterm, same 128x48 grid as the console.
-function Grub({ selected, timeout, onPick }) {
-  const inner = COLS - 4
-  const boxRows = ROWS - 12
-  const title = 'GNU GRUB  version 2.06'
-
-  return (
-    <>
-      <div>{'\n' + ' '.repeat((COLS - title.length) / 2) + title + '\n\n'}</div>
-      <div>{' ┌' + '─'.repeat(inner) + '┐'}</div>
-      {Array.from({ length: boxRows }, (_, i) => {
-        const text = ENTRIES[i]
-        if (!text) return <div key={i}>{' │' + ' '.repeat(inner) + '│'}</div>
-        const label = (i === selected ? '*' : ' ') + text
-        return (
-          <div key={i} className="grub-entry" onClick={() => onPick(i)}>
-            {' │'}
-            <span className={i === selected ? 'grub-hl' : ''}>{label.padEnd(inner)}</span>
-            {'│'}
-          </div>
-        )
-      })}
-      <div>{' └' + '─'.repeat(inner) + '┘'}</div>
-      <div>
-        {'\n      Use the ↑ and ↓ keys to select which entry is highlighted.\n' +
-          "      Press enter to boot the selected OS, `e' to edit the commands before booting or `c' for a command-line.\n"}
-        {timeout !== null && `   The highlighted entry will be executed automatically in ${timeout}s.`}
-      </div>
-    </>
-  )
 }
