@@ -6,11 +6,11 @@ import './boot.css'
 const ROWS = 48
 
 const FIRMWARE_MS = 600
-const INITRD_AFTER_MS = 200 // "Loading initial ramdisk ..." follows the kernel image
-const KERNEL_AFTER_MS = 450
+const INITRD_AFTER_MS = 150 // "Loading initial ramdisk ..." follows the kernel image
+const KERNEL_AFTER_MS = 300
 // The screen shows nothing new until fbcon takes over, so skip ahead to just
 // before that instead of sitting on GRUB's last words.
-const KERNEL_SKIP_TO = BOOTLOG.find((e) => e.screen).t - 0.25
+const KERNEL_SKIP_TO = BOOTLOG.find((e) => e.screen).t - 0.1
 // fbcon on efifb redraws the whole screen for every scroll ("scrolling: redraw"),
 // and printk waits for the console, so output can't come faster than this.
 const MS_PER_LINE = 0.45
@@ -69,6 +69,8 @@ export default function BootSequence({ onDone }) {
       if (count <= SCREEN_ON && due <= SCREEN_ON) {
         // still showing GRUB's last words, fbcon hasn't taken over yet
       } else {
+        // fbcon draws everything printed so far in one go
+        if (count <= SCREEN_ON) count = SCREEN_ON + 1
         budget += (dt * 1000) / MS_PER_LINE
         const n = Math.min(due - count, Math.floor(budget))
         budget -= n
