@@ -163,11 +163,93 @@ h1 {
   90% { opacity: 1; transform: translate(-3px, 2px); clip-path: inset(5% 0 75% 0); }
 }
 
+.nav { display: flex; gap: 20px; }
+.nav a { color: var(--dim); text-decoration: none; text-transform: none; letter-spacing: 0.05em; }
+.nav a:hover, .nav a:focus-visible { color: var(--accent); outline: none; }
+.nav a.active { color: var(--accent); }
+.nav a.active::before { content: '> '; }
+
+a { color: var(--accent); }
+
+/* Home: three small cards under the hero */
+.pillars {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: 40px;
+  background: var(--dim);
+  border: 1px solid var(--dim);
+}
+.pillars li {
+  background: var(--bg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.pillars strong { color: var(--accent); font-weight: 700; font-size: 15px; }
+.pillars li:hover strong { text-shadow: 0 0 10px var(--accent); }
+
+/* Home: interactive shell */
+.term {
+  border: 1px solid var(--dim);
+  margin-top: 16px;
+  font-size: 13px;
+  cursor: text;
+}
+.term-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.term-body {
+  padding: 12px;
+  height: 280px;
+  overflow-y: auto;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dim) transparent;
+}
+.term-out { color: var(--fg); }
+.term-line { display: flex; gap: 1ch; }
+.term-line input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  color: var(--fg);
+  font: inherit;
+  caret-color: var(--accent);
+}
+
+/* About: man page */
+.man { margin: 40px 0; display: flex; flex-direction: column; gap: 28px; max-width: 760px; }
+.man-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+.man-title { font-size: clamp(48px, 9vw, 96px); }
+.man-section h2 { font-size: 14px; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 10px; }
+.man-body { padding-left: 4ch; display: flex; flex-direction: column; gap: 10px; line-height: 1.7; }
+.man-opts { display: flex; flex-direction: column; gap: 16px; }
+.man-opts dd { padding-left: 4ch; color: var(--fg); }
+.nowrap { white-space: nowrap; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
 }
 
 @media (max-width: 520px) {
   .screen { padding: 16px; }
-  .topbar span:last-child { display: none; }
+  .topbar > span:last-child { display: none; }
+  .bottombar span:nth-child(2) { display: none; }
+  .man-body, .man-opts dd { padding-left: 2ch; }
+  .pillars { grid-template-columns: 1fr; }
 }
