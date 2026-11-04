@@ -190,27 +190,7 @@ h1 {
 
 a { color: var(--accent); }
 
-/* Home: three small cards under the hero */
-.pillars {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  margin-top: 40px;
-  background: var(--dim);
-  border: 1px solid var(--dim);
-}
-.pillars li {
-  background: var(--bg);
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-  line-height: 1.6;
-}
-.pillars strong { color: var(--accent); font-weight: 700; font-size: 15px; }
-.pillars li:hover strong { text-shadow: 0 0 10px var(--accent); }
+.last-login { margin-top: 24px; font-size: 12px; white-space: pre; }
 
 /* Home: interactive shell */
 .term {
@@ -286,5 +266,4 @@ a { color: var(--accent); }
   .man-body { padding-left: 2ch; }
   .man-opts { grid-template-columns: 1fr; gap: 0; }
   .man-opts dd { padding-left: 2ch; margin-bottom: 6px; }
-  .pillars { grid-template-columns: 1fr; }
 }

@@ -32,7 +32,25 @@ const LOGO = [
   '             ',
 ]
 
-const COMMANDS = ['help', 'about', 'instagram', 'ls', 'cat', 'cd', 'whoami', 'neofetch', 'date', 'clear', 'exit', 'echo', 'pwd', 'uname', 'history', 'sudo', 'hack']
+const COMMANDS = ['help', 'about', 'instagram', 'ls', 'cat', 'cd', 'whoami', 'neofetch', 'date', 'clear', 'exit', 'logout', 'reboot', 'echo', 'pwd', 'uname', 'history', 'sudo', 'rm', 'hack']
+const FILES = ['about/', 'values.txt', '.secret']
+
+// Longest prefix every match shares, like bash does on the first tab.
+const common = (xs) => xs.reduce((a, b) => {
+  let i = 0
+  while (i < a.length && a[i] === b[i]) i++
+  return a.slice(0, i)
+})
+
+// What tab can complete: commands for the first word, file names after it.
+function candidates(input) {
+  const words = input.split(' ')
+  const word = words.at(-1)
+  if (words.length === 1) return { word, list: COMMANDS.filter((c) => c.startsWith(word)) }
+  const dirsOnly = words[0] === 'cd'
+  const list = FILES.filter((f) => f.startsWith(word) && (word.startsWith('.') || !f.startsWith('.')) && (!dirsOnly || f.endsWith('/')))
+  return { word, list }
+}
 
 function uptime() {
   const m = Math.floor((Date.now() - session.bootedAt) / 60000)
@@ -154,9 +172,14 @@ export default function Terminal({ onExit }) {
       setInput(history[next])
     } else if (e.key === 'Tab') {
       e.preventDefault()
-      const matches = COMMANDS.filter((c) => c.startsWith(input))
-      if (input && matches.length === 1) setInput(matches[0] + ' ')
-      else if (input && matches.length > 1) print(matches.join('  '))
+      const { word, list } = candidates(input)
+      if (!list.length) return
+      const base = input.slice(0, input.length - word.length)
+      if (list.length === 1) return setInput(base + list[0] + (list[0].endsWith('/') ? '' : ' '))
+      const prefix = common(list)
+      if (prefix.length > word.length) return setInput(base + prefix)
+      // nothing more to fill in: list the options under the prompt, like bash
+      setLines((l) => [...l, { in: input }, { out: list.join('  ') }])
     } else if (e.key === 'l' && e.ctrlKey) {
       e.preventDefault()
       setLines([])
