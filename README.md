@@ -13,7 +13,7 @@ Cloudflare build settings: build command `npm run build`, deploy command `npx wr
 
 ## Boot sequence
 
-The home page plays a real Arch Linux boot (kernel 6.0.8-arch1-1, systemd 252) before the site loads.
+The home page can play a real Arch Linux boot (kernel 6.0.8-arch1-1, systemd 252) before the site loads. It is switched off for now: `src/pages/Home.jsx` no longer renders `BootSequence`.
 The text comes from a real `journalctl -b`, saved in `scripts/arch-boot-journal.txt`
 ([source](https://bbs.archlinux.org/viewtopic.php?id=281336)). `scripts/build-bootlog.mjs` turns it into
 what the console showed, with timing, in `src/boot/bootlog.json`. Run `node scripts/build-bootlog.mjs`

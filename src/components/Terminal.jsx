@@ -149,7 +149,7 @@ export default function Terminal({ onExit }) {
       case 'exit':
       case 'logout':
       case 'reboot':
-        return slow(['logout', '', 'rebooting...'], 300, onExit)
+        return slow(['logout'], 300, onExit)
       default:
         return print(`bash: ${cmd}: command not found`)
     }
