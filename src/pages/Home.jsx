@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import BootSequence from '../boot/BootSequence.jsx'
+import TorusBg from '../components/TorusBg.jsx'
 import Layout from '../components/Layout.jsx'
 import Scramble from '../components/Scramble.jsx'
 import Terminal from '../components/Terminal.jsx'
-import { INSTAGRAM, session } from '../session.js'
+import { INSTAGRAM } from '../session.js'
 
 const isTouch = () => window.matchMedia('(pointer: coarse)').matches
 
@@ -23,25 +23,15 @@ function lastLogin() {
 }
 
 export default function Home() {
-  const [booted, setBooted] = useState(session.booted)
   const [entered, setEntered] = useState(false)
   const [touch] = useState(isTouch)
   const [login] = useState(lastLogin)
 
-  const finishBoot = useCallback(() => {
-    session.booted = true
-    session.bootedAt = Date.now()
-    setBooted(true)
-  }, [])
-
-  const reboot = useCallback(() => {
-    session.booted = false
-    setEntered(false)
-    setBooted(false)
-  }, [])
+  // The Arch boot (src/boot/) is switched off for now; `exit` just closes the shell.
+  const closeShell = useCallback(() => setEntered(false), [])
 
   useEffect(() => {
-    if (!booted || entered || touch) return
+    if (entered || touch) return
     const onKey = (e) => {
       if (e.key !== 'Enter') return
       e.preventDefault()
@@ -49,12 +39,12 @@ export default function Home() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [booted, entered, touch])
-
-  if (!booted) return <BootSequence onDone={finishBoot} />
+  }, [entered, touch])
 
   return (
-    <Layout>
+    <>
+      <TorusBg />
+      <Layout>
       <section className="hero">
         <h1 className="glitch" data-text="HELLO, WORLD">
           <Scramble text="HELLO, WORLD" duration={1100} delay={250} />
@@ -70,7 +60,7 @@ export default function Home() {
             <a href={INSTAGRAM} target="_blank" rel="noreferrer">&gt; instagram</a>
           </nav>
         ) : entered ? (
-          <Terminal onExit={reboot} />
+          <Terminal onExit={closeShell} />
         ) : (
           <button className="enter" onClick={() => setEntered(true)}>
             [ PRESS ENTER ]
@@ -79,6 +69,7 @@ export default function Home() {
 
         <p className="last-login dim">{login}</p>
       </section>
-    </Layout>
+      </Layout>
+    </>
   )
 }
