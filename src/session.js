@@ -5,12 +5,15 @@ export const session = {
   bootedAt: Date.now(),
 }
 
+// One line each. `cat values.txt` in the home terminal prints these too.
 export const VALUES = [
-  ['katılımcılık', 'herkes katkı verebilir. dikey hiyerarşiye gereğinden fazla takılmıyoruz; fikir iyiyse iyidir, kimin söylediği önemli değil.'],
-  ['yenilikçilik', 'her etkinlikte, her projede yeni bir şey arıyoruz. ortaya ne çıkıyorsa içinde bir orijinallik olsun, kopyala-yapıştır değil.'],
-  ['eşitlik', 'burada çalışan bütün gönüllülerin hakları eşit. saygı default ayar, opsiyonel değil.'],
-  ['paylaşımcılık', 'yaptığımız her şey bütün üyelere ve giresun üniversitesi\'ne açık. ürettiğimizi paylaşırız, bencillik yok.'],
-  ['şeffaflık', 'bütün toplantılar raporlanır, tutanaklar üyelere açık. belgelerde de anlaşmalarda da gizli kapaklı iş yok.'],
-  ['gönüllülük', 'kimse zorla burada değil. herkes istediği için burada, o kadar.'],
-  ['sorumluluk', 'herkes bir ucundan tutar. hepimiz büyük bir bütünün parçasıyız ve bunu ciddiye alıyoruz.'],
+  ['katıl', 'herkes katkı verir. hiyerarşi minimumda.'],
+  ['orijinal', 'kopyala-yapıştır yok.'],
+  ['eşit', 'her gönüllünün hakkı eşit.'],
+  ['paylaş', 'ne üretirsek herkese açık.'],
+  ['şeffaf', 'toplantı notları üyelere açık.'],
+  ['gönüllü', 'kimse zorla burada değil.'],
+  ['sorumlu', 'herkes bir ucundan tutar.'],
 ]
+
+export const INSTAGRAM = 'https://www.instagram.com/grusiber/'

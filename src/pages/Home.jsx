@@ -1,19 +1,32 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import BootSequence from '../boot/BootSequence.jsx'
 import Layout from '../components/Layout.jsx'
 import Scramble from '../components/Scramble.jsx'
 import Terminal from '../components/Terminal.jsx'
-import { session } from '../session.js'
+import { INSTAGRAM, session } from '../session.js'
 
-const PILLARS = [
-  ['01', 'öğren', 'nasıl çalıştığını anlamadan korunamazsın.'],
-  ['02', 'kurcala', 'kurcala, boz, tekrar kur. lab ortamında tabii.'],
-  ['03', 'koru', 'öğrendiğini paylaş. herkes biraz daha güvende olsun.'],
-]
+const isTouch = () => window.matchMedia('(pointer: coarse)').matches
+
+// "Last login" like a real tty: this visitor's previous visit, if we know it.
+function lastLogin() {
+  let prev = null
+  try {
+    prev = localStorage.getItem('lastLogin')
+    localStorage.setItem('lastLogin', new Date().toString())
+  } catch {}
+  const d = prev ? new Date(prev) : new Date()
+  const day = d.toLocaleString('en-US', { weekday: 'short' })
+  const mon = d.toLocaleString('en-US', { month: 'short' })
+  const time = d.toTimeString().slice(0, 8)
+  return `Last login: ${day} ${mon} ${String(d.getDate()).padStart(2)} ${time} ${d.getFullYear()} on tty1`
+}
 
 export default function Home() {
   const [booted, setBooted] = useState(session.booted)
   const [entered, setEntered] = useState(false)
+  const [touch] = useState(isTouch)
+  const [login] = useState(lastLogin)
 
   const finishBoot = useCallback(() => {
     session.booted = true
@@ -28,7 +41,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (!booted || entered) return
+    if (!booted || entered || touch) return
     const onKey = (e) => {
       if (e.key !== 'Enter') return
       e.preventDefault()
@@ -36,16 +49,13 @@ export default function Home() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [booted, entered])
+  }, [booted, entered, touch])
 
   if (!booted) return <BootSequence onDone={finishBoot} />
 
   return (
     <Layout>
       <section className="hero">
-        <p className="code">
-          <Scramble text="// giresun üniversitesi siber güvenlik topluluğu" duration={900} />
-        </p>
         <h1 className="glitch" data-text="HELLO, WORLD">
           <Scramble text="HELLO, WORLD" duration={1100} delay={250} />
         </h1>
@@ -53,7 +63,13 @@ export default function Home() {
           welcome to the grusiber community<span className="cursor">_</span>
         </p>
 
-        {entered ? (
+        {touch ? (
+          // typing commands on a phone keyboard is no fun: plain links instead
+          <nav className="quick">
+            <Link to="/about/">&gt; man grusiber</Link>
+            <a href={INSTAGRAM} target="_blank" rel="noreferrer">&gt; instagram</a>
+          </nav>
+        ) : entered ? (
           <Terminal onExit={reboot} />
         ) : (
           <button className="enter" onClick={() => setEntered(true)}>
@@ -61,15 +77,7 @@ export default function Home() {
           </button>
         )}
 
-        <ul className="pillars">
-          {PILLARS.map(([n, title, text], i) => (
-            <li key={n} className="fade-in" style={{ animationDelay: `${1.2 + i * 0.15}s` }}>
-              <span className="dim">{n}</span>
-              <strong>&gt; {title}</strong>
-              <span>{text}</span>
-            </li>
-          ))}
-        </ul>
+        <p className="last-login dim">{login}</p>
       </section>
     </Layout>
   )

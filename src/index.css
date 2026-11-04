@@ -107,6 +107,25 @@ h1 {
   animation: none;
 }
 
+/* Home on phones: links instead of the terminal */
+.quick {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.quick a {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+  padding: 12px 22px;
+  letter-spacing: 0.1em;
+}
+
+.quick a:active { background: var(--accent); color: #000; }
+
 .cursor { animation: blink 1s steps(1) infinite; color: var(--accent); }
 .blink { animation: blink 1.2s steps(1) infinite; }
 
@@ -171,27 +190,7 @@ h1 {
 
 a { color: var(--accent); }
 
-/* Home: three small cards under the hero */
-.pillars {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  margin-top: 40px;
-  background: var(--dim);
-  border: 1px solid var(--dim);
-}
-.pillars li {
-  background: var(--bg);
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-  line-height: 1.6;
-}
-.pillars strong { color: var(--accent); font-weight: 700; font-size: 15px; }
-.pillars li:hover strong { text-shadow: 0 0 10px var(--accent); }
+.last-login { margin-top: 24px; font-size: 12px; white-space: pre; }
 
 /* Home: interactive shell */
 .term {
@@ -233,14 +232,28 @@ a { color: var(--accent); }
 }
 
 /* About: man page */
-.man { margin: 40px 0; display: flex; flex-direction: column; gap: 28px; max-width: 760px; }
+.man { margin: 40px 0; display: flex; flex-direction: column; gap: 24px; max-width: 45em; font-size: 14px; }
 .man-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
-.man-title { font-size: clamp(48px, 9vw, 96px); }
-.man-section h2 { font-size: 14px; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 10px; }
-.man-body { padding-left: 4ch; display: flex; flex-direction: column; gap: 10px; line-height: 1.7; }
-.man-opts { display: flex; flex-direction: column; gap: 16px; }
-.man-opts dd { padding-left: 4ch; color: var(--fg); }
-.nowrap { white-space: nowrap; }
+.man-section h2 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.man-body { padding-left: 4ch; display: flex; flex-direction: column; gap: 4px; line-height: 1.6; }
+.man-body b { font-weight: 700; }
+.man-opts, .man-keys { display: grid; grid-template-columns: max-content 1fr; gap: 4px 3ch; }
+.man-opts > div, .man-keys > div { display: contents; }
+.man-opts dd, .man-keys dd { color: var(--fg); }
+.man a { text-decoration: none; font-weight: 700; }
+.man a:hover { background: var(--accent); color: #000; }
+
+/* less(1) status line */
+.less-status {
+  position: sticky;
+  bottom: 0;
+  background: var(--accent);
+  color: #000;
+  font-size: 13px;
+  padding: 2px 6px;
+  max-width: 45em;
+  margin-top: auto;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
@@ -250,6 +263,7 @@ a { color: var(--accent); }
   .screen { padding: 16px; }
   .topbar > span:last-child { display: none; }
   .bottombar span:nth-child(2) { display: none; }
-  .man-body, .man-opts dd { padding-left: 2ch; }
-  .pillars { grid-template-columns: 1fr; }
+  .man-body { padding-left: 2ch; }
+  .man-opts { grid-template-columns: 1fr; gap: 0; }
+  .man-opts dd { padding-left: 2ch; margin-bottom: 6px; }
 }

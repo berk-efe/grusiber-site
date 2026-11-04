@@ -20,7 +20,7 @@ export default function Layout({ children }) {
     <main className="screen fade-in">
       <div className="frame">
         <header className="topbar">
-          <span>GRUSIBER://node-01</span>
+          <span>GRUSIBER</span>
           <nav className="nav">
             <NavLink to="/" end>~/</NavLink>
             <NavLink to="/about/">about/</NavLink>

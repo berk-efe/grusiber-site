@@ -1,10 +1,49 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
-import Scramble from '../components/Scramble.jsx'
-import { VALUES } from '../session.js'
+import { INSTAGRAM, VALUES } from '../session.js'
 
-// Written as a man page: `man grusiber`
+const KEYS = [
+  ['h', 'yardım'],
+  ['q', 'ana sayfa'],
+  ['j', 'aşağı'],
+  ['k', 'yukarı'],
+  ['gg', 'en üst'],
+  ['G', 'en alt'],
+]
+
+// `man grusiber`, with less(1) keys and status line.
 export default function About() {
+  const [help, setHelp] = useState(false)
+  const [percent, setPercent] = useState(0)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    let lastG = 0
+    const onKey = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return
+      if (e.key === 'j') window.scrollBy(0, 48)
+      else if (e.key === 'k') window.scrollBy(0, -48)
+      else if (e.key === 'G') window.scrollTo(0, document.body.scrollHeight)
+      else if (e.key === 'g') {
+        if (Date.now() - lastG < 400) window.scrollTo(0, 0)
+        lastG = Date.now()
+      } else if (e.key === 'h') setHelp((v) => !v)
+      else if (e.key === 'q') (help ? setHelp(false) : navigate('/'))
+    }
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      setPercent(max > 0 ? Math.round((window.scrollY / max) * 100) : 100)
+    }
+    onScroll()
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [help, navigate])
+
   return (
     <Layout>
       <article className="man">
@@ -14,61 +53,62 @@ export default function About() {
           <span>GRUSIBER(7)</span>
         </header>
 
-        <h1 className="glitch man-title" data-text="man grusiber">
-          <Scramble text="man grusiber" duration={800} />
-        </h1>
+        {help ? (
+          <Section name="KEY BINDINGS">
+            <dl className="man-keys">
+              {KEYS.map(([k, v]) => (
+                <div key={k}>
+                  <dt className="accent">{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </Section>
+        ) : (
+          <>
+            <Section name="NAME">
+              <p>grusiber — giresun üniversitesi siber güvenlik topluluğu</p>
+            </Section>
 
-        <Section name="NAME">
-          <p>grusiber — giresun üniversitesi siber güvenlik topluluğu</p>
-        </Section>
+            <Section name="SYNOPSIS">
+              <p>
+                <b className="accent">grusiber</b> [<b>OPTIONS</b>]
+              </p>
+            </Section>
 
-        <Section name="SYNOPSIS">
-          <p>
-            <span className="accent">grusiber</span>{' '}
-            {['merak', 'öğren', 'kurcala', 'paylaş', 'tekrarla'].map((o) => (
-              <span key={o} className="nowrap">[--{o}] </span>
-            ))}
-          </p>
-        </Section>
+            <Section name="DESCRIPTION">
+              <p>giresun üniversitesi'nde siber güvenlik topluluğu.</p>
+              <p>öğreniyoruz, kurcalıyoruz, paylaşıyoruz.</p>
+            </Section>
 
-        <Section name="DESCRIPTION">
-          <p>
-            giresun üniversitesi'nde siber güvenliğin neden bu kadar önemli olduğunu anlatmaya çalışan, buna karşı neler
-            yapılabilir diye kafa yoran bir topluluğuz.
-          </p>
-          <p>
-            etkinlikler, projeler, bolca kurcalama ve gece 3'te "bu neden çalışmıyor" anları. hepsi var. kısaca:
-            sistemlerin nasıl kırıldığını öğreniyoruz ki nasıl korunacağını bilelim.
-          </p>
-        </Section>
+            <Section name="OPTIONS">
+              <dl className="man-opts">
+                {VALUES.map(([key, text]) => (
+                  <div key={key}>
+                    <dt className="accent">--{key}</dt>
+                    <dd>{text}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Section>
 
-        <Section name="VALUES">
-          <dl className="man-opts">
-            {VALUES.map(([key, text], i) => (
-              <div key={key} className="fade-in" style={{ animationDelay: `${0.3 + i * 0.08}s` }}>
-                <dt className="accent">--{key}</dt>
-                <dd>{text}</dd>
-              </div>
-            ))}
-          </dl>
-        </Section>
+            <Section name="SEE ALSO">
+              <p>
+                <Link to="/">home(1)</Link>,{' '}
+                <a href={INSTAGRAM} target="_blank" rel="noreferrer">instagram(4)</a>
+              </p>
+            </Section>
 
-        <Section name="BUGS">
-          <p>kahve stoğu sürekli bitiyor. çözüm aranıyor.</p>
-        </Section>
-
-        <Section name="SEE ALSO">
-          <p>
-            <Link to="/">home(1)</Link>, merak(7), sen(1)
-          </p>
-        </Section>
-
-        <footer className="man-head dim">
-          <span>grusiber 0.2</span>
-          <span>{new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</span>
-          <span>GRUSIBER(7)</span>
-        </footer>
+            <Section name="KNOWN BUGS">
+              <p>kahve hep bitiyor.</p>
+            </Section>
+          </>
+        )}
       </article>
+
+      <div className="less-status" aria-hidden="true">
+        Manual page grusiber(7) {percent}% (h: yardım, q: çık)
+      </div>
     </Layout>
   )
 }
