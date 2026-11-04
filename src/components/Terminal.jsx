@@ -83,7 +83,7 @@ export default function Terminal({ onExit }) {
         return print(args.some((a) => a.startsWith('-') && a.includes('a')) ? 'about/  values.txt  .secret' : 'about/  values.txt')
       case 'cat':
         if (!arg) return print('cat: dosya adı lazım dostum')
-        if (arg === 'values.txt') return print(VALUES.map(([k]) => `- ${k}`))
+        if (arg === 'values.txt') return print(VALUES.map(([k, v]) => `--${k.padEnd(10)}${v}`))
         if (arg === '.secret') return print('OvO', '', 'aferin, meraklısın. tam bizlik.')
         if (arg.replace(/\/$/, '') === 'about') return print(`cat: ${arg}: Is a directory`)
         return print(`cat: ${arg}: No such file or directory`)
