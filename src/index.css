@@ -107,6 +107,25 @@ h1 {
   animation: none;
 }
 
+/* Home on phones: links instead of the terminal */
+.quick {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.quick a {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+  padding: 12px 22px;
+  letter-spacing: 0.1em;
+}
+
+.quick a:active { background: var(--accent); color: #000; }
+
 .cursor { animation: blink 1s steps(1) infinite; color: var(--accent); }
 .blink { animation: blink 1.2s steps(1) infinite; }
 

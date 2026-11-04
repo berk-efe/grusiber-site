@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import BootSequence from '../boot/BootSequence.jsx'
 import Layout from '../components/Layout.jsx'
 import Scramble from '../components/Scramble.jsx'
 import Terminal from '../components/Terminal.jsx'
-import { session } from '../session.js'
+import { INSTAGRAM, session } from '../session.js'
+
+const isTouch = () => window.matchMedia('(pointer: coarse)').matches
 
 const PILLARS = [
   ['01', 'öğren', 'nasıl çalıştığını anlamadan korunamazsın.'],
@@ -14,6 +17,7 @@ const PILLARS = [
 export default function Home() {
   const [booted, setBooted] = useState(session.booted)
   const [entered, setEntered] = useState(false)
+  const [touch] = useState(isTouch)
 
   const finishBoot = useCallback(() => {
     session.booted = true
@@ -28,7 +32,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (!booted || entered) return
+    if (!booted || entered || touch) return
     const onKey = (e) => {
       if (e.key !== 'Enter') return
       e.preventDefault()
@@ -36,16 +40,13 @@ export default function Home() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [booted, entered])
+  }, [booted, entered, touch])
 
   if (!booted) return <BootSequence onDone={finishBoot} />
 
   return (
     <Layout>
       <section className="hero">
-        <p className="code">
-          <Scramble text="// giresun üniversitesi siber güvenlik topluluğu" duration={900} />
-        </p>
         <h1 className="glitch" data-text="HELLO, WORLD">
           <Scramble text="HELLO, WORLD" duration={1100} delay={250} />
         </h1>
@@ -53,7 +54,13 @@ export default function Home() {
           welcome to the grusiber community<span className="cursor">_</span>
         </p>
 
-        {entered ? (
+        {touch ? (
+          // typing commands on a phone keyboard is no fun: plain links instead
+          <nav className="quick">
+            <Link to="/about/">&gt; man grusiber</Link>
+            <a href={INSTAGRAM} target="_blank" rel="noreferrer">&gt; instagram</a>
+          </nav>
+        ) : entered ? (
           <Terminal onExit={reboot} />
         ) : (
           <button className="enter" onClick={() => setEntered(true)}>

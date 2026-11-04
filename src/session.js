@@ -15,3 +15,5 @@ export const VALUES = [
   ['gönüllü', 'kimse zorla burada değil.'],
   ['sorumlu', 'herkes bir ucundan tutar.'],
 ]
+
+export const INSTAGRAM = 'https://www.instagram.com/grusiber/'

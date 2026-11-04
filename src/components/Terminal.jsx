@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { session, VALUES } from '../session.js'
+import { INSTAGRAM, session, VALUES } from '../session.js'
 
 const PROMPT = 'guest@grusiber:~$'
 const UNAME = 'Linux grusiber 6.0.8-arch1-1 #1 SMP PREEMPT_DYNAMIC Thu, 10 Nov 2022 21:14:24 +0000 x86_64 GNU/Linux'
@@ -10,6 +10,7 @@ const HELP = [
   '',
   '  help         bu liste',
   '  about        biz kimiz?',
+  '  instagram    bizi takip et',
   '  ls           etrafa bak',
   '  cat <dosya>  dosya oku',
   '  whoami       sen kimsin',
@@ -31,7 +32,7 @@ const LOGO = [
   '             ',
 ]
 
-const COMMANDS = ['help', 'about', 'ls', 'cat', 'cd', 'whoami', 'neofetch', 'date', 'clear', 'exit', 'echo', 'pwd', 'uname', 'history', 'sudo', 'hack']
+const COMMANDS = ['help', 'about', 'instagram', 'ls', 'cat', 'cd', 'whoami', 'neofetch', 'date', 'clear', 'exit', 'echo', 'pwd', 'uname', 'history', 'sudo', 'hack']
 
 function uptime() {
   const m = Math.floor((Date.now() - session.bootedAt) / 60000)
@@ -75,6 +76,9 @@ export default function Terminal({ onExit }) {
         return print(HELP)
       case 'about':
         return navigate('/about/')
+      case 'instagram':
+        window.open(INSTAGRAM, '_blank', 'noopener')
+        return print('instagram.com/grusiber açılıyor...')
       case 'cd':
         if (!arg || arg === '~' || arg === '.') return
         if (arg.replace(/\/$/, '') === 'about') return navigate('/about/')

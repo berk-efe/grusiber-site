@@ -5,17 +5,19 @@ import './boot.css'
 // The efifb console of the source machine: 1024x768 with an 8x16 font.
 const ROWS = 48
 
-const FIRMWARE_MS = 600
-const INITRD_AFTER_MS = 150 // "Loading initial ramdisk ..." follows the kernel image
-const KERNEL_AFTER_MS = 300
-// The screen shows nothing new until fbcon takes over, so skip ahead to just
-// before that instead of sitting on GRUB's last words.
+// The whole thing takes BOOT_MS of wall-clock time no matter how fast the
+// machine is. The log is replayed on a compressed clock: its fast and slow
+// stretches keep their real proportions, and a slow machine just draws fewer
+// frames (skipping lines), it never takes longer.
+const FIRMWARE_MS = 250
+const INITRD_AFTER_MS = 80 // "Loading initial ramdisk ..." follows the kernel image
+const KERNEL_AFTER_MS = 150
+const KERNEL_MS = 1400
+const BLANK_MS = 200 // display manager grabs the VT
+
+// The screen shows nothing new until fbcon takes over, so start just before that.
 const KERNEL_SKIP_TO = BOOTLOG.find((e) => e.screen).t - 0.1
-// fbcon on efifb redraws the whole screen for every scroll ("scrolling: redraw"),
-// and printk waits for the console, so output can't come faster than this.
-const MS_PER_LINE = 0.45
-const DM_HANDOFF_MS = 250 // last status line -> display manager grabs the VT
-const BLANK_MS = 900
+const KERNEL_END = BOOTLOG.at(-1).t
 
 const SCREEN_ON = BOOTLOG.findIndex((e) => e.screen)
 
@@ -50,41 +52,24 @@ export default function BootSequence({ onDone }) {
     return () => (clearTimeout(a), clearTimeout(b))
   }, [phase])
 
-  // Kernel + userspace: play the log on its own clock.
+  // Kernel + userspace: play the log on a compressed clock.
   const raf = useRef()
   useEffect(() => {
     if (phase !== 'kernel') return
-    let last = performance.now()
-    let clock = KERNEL_SKIP_TO // seconds since the kernel started
+    const start = performance.now()
     let count = 0
-    let budget = 0
 
     const frame = (now) => {
-      const dt = (now - last) / 1000
-      last = now
-      clock += dt
+      const p = Math.min(1, (now - start) / KERNEL_MS)
+      const clock = KERNEL_SKIP_TO + p * (KERNEL_END - KERNEL_SKIP_TO)
       let due = count
       while (due < BOOTLOG.length && BOOTLOG[due].t <= clock) due++
+      if (p >= 1) due = BOOTLOG.length
+      // fbcon draws everything printed so far in one go
+      if (due > SCREEN_ON && count <= SCREEN_ON) due = Math.max(due, SCREEN_ON + 1)
+      if (due !== count) setShown((count = due))
 
-      if (count <= SCREEN_ON && due <= SCREEN_ON) {
-        // still showing GRUB's last words, fbcon hasn't taken over yet
-      } else {
-        // fbcon draws everything printed so far in one go
-        if (count <= SCREEN_ON) count = SCREEN_ON + 1
-        budget += (dt * 1000) / MS_PER_LINE
-        const n = Math.min(due - count, Math.floor(budget))
-        budget -= n
-        count += n
-        // console is behind: the kernel is stuck in printk, time stands still
-        if (count < due) clock = BOOTLOG[count].t
-        else budget = 0
-        if (n) setShown(count)
-      }
-
-      if (count >= BOOTLOG.length) {
-        setTimeout(() => setPhase('blank'), DM_HANDOFF_MS)
-        return
-      }
+      if (p >= 1) return setPhase('blank')
       raf.current = requestAnimationFrame(frame)
     }
     raf.current = requestAnimationFrame(frame)

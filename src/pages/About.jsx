@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
-import { VALUES } from '../session.js'
+import { INSTAGRAM, VALUES } from '../session.js'
 
 const KEYS = [
   ['h', 'yardım'],
@@ -95,7 +95,7 @@ export default function About() {
             <Section name="SEE ALSO">
               <p>
                 <Link to="/">home(1)</Link>,{' '}
-                <a href="https://github.com/berk-efe/grusiber-site">source(4)</a>
+                <a href={INSTAGRAM} target="_blank" rel="noreferrer">instagram(4)</a>
               </p>
             </Section>
 
