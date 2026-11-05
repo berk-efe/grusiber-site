@@ -4,6 +4,7 @@ import TorusBg from '../components/TorusBg.jsx'
 import Layout from '../components/Layout.jsx'
 import Scramble from '../components/Scramble.jsx'
 import Terminal from '../components/Terminal.jsx'
+import CyberMap from '../components/CyberMap.jsx'
 import { INSTAGRAM } from '../session.js'
 
 const isTouch = () => window.matchMedia('(pointer: coarse)').matches
@@ -69,6 +70,7 @@ export default function Home() {
 
         <p className="last-login dim">{login}</p>
       </section>
+      <CyberMap />
       </Layout>
     </>
   )
