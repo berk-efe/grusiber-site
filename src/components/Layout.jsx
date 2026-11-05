@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { session } from '../session.js'
+import AnnounceBar from './AnnounceBar.jsx'
 
 function useUptime() {
   const [now, setNow] = useState(Date.now())
@@ -13,29 +14,33 @@ function useUptime() {
   return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`
 }
 
-export default function Layout({ children }) {
+export default function Layout({ children, banner = false }) {
   const uptime = useUptime()
 
   return (
-    <main className="screen fade-in">
-      <div className="frame">
-        <header className="topbar">
-          <span>GRUSIBER</span>
-          <nav className="nav">
-            <NavLink to="/" end>~/</NavLink>
-            <NavLink to="/about/">about/</NavLink>
-          </nav>
-          <span className="dim">up {uptime}</span>
-        </header>
+    <div className="page">
+      {banner && <AnnounceBar />}
+      <main className="screen fade-in">
+        <div className="frame">
+          <header className="topbar">
+            <span>GRUSIBER</span>
+            <nav className="nav">
+              <NavLink to="/" end>~/</NavLink>
+              <NavLink to="/about/">about/</NavLink>
+              <NavLink to="/duyurular/">duyurular/</NavLink>
+            </nav>
+            <span className="dim">up {uptime}</span>
+          </header>
 
-        {children}
+          {children}
 
-        <footer className="bottombar dim">
-          <span>© {new Date().getFullYear()} grusiber</span>
-          <span>giresun üniversitesi</span>
-          <span>v0.2.0</span>
-        </footer>
-      </div>
-    </main>
+          <footer className="bottombar dim">
+            <span>© {new Date().getFullYear()} grusiber</span>
+            <span>giresun üniversitesi</span>
+            <span>v0.2.0</span>
+          </footer>
+        </div>
+      </main>
+    </div>
   )
 }
