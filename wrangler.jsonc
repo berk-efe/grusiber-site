@@ -1,5 +1,6 @@
 {
   // Cloudflare Workers static assets config. `npm run deploy` builds and uploads dist/.
+  "previews": {},
   "name": "grusiber-site",
   "compatibility_date": "2026-10-01",
   "assets": {
