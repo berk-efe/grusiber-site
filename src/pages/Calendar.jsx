@@ -75,6 +75,7 @@ export default function Calendar() {
   const [params, setParams] = useSearchParams()
   const today = todayTR()
   const [open, setOpen] = useState(null)
+  const [picked, setPicked] = useState(null)
 
   // ?ay=2026-12 picks the month, so a month can be shared as a link
   const [year, month] = useMemo(() => {
@@ -84,10 +85,14 @@ export default function Calendar() {
   }, [params, today])
 
   const go = (delta) => {
+    setPicked(null)
     const d = new Date(Date.UTC(year, month + delta, 1))
     setParams({ ay: `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}` }, { replace: true })
   }
-  const goToday = () => setParams({}, { replace: true })
+  const goToday = () => {
+    setPicked(null)
+    setParams({}, { replace: true })
+  }
 
   const byDay = useMemo(() => {
     const map = {}
@@ -108,6 +113,14 @@ export default function Calendar() {
   }, [year, month])
   // drop a trailing week that is all next month
   const shown = cells.slice(35).every((c) => !c.inMonth) ? cells.slice(0, 35) : cells
+
+  // phone view: the day whose events are listed under the grid. Defaults to
+  // today in the current month, else the month's first day with an event.
+  const monthKey = `${year}-${pad(month + 1)}`
+  const selected =
+    picked ??
+    (today.startsWith(monthKey) ? today : shown.find((c) => c.inMonth && byDay[c.day])?.day ?? `${monthKey}-01`)
+  const selectedEvents = byDay[selected] ?? []
 
   const now = nowTR()
   const upcoming = EVENTS.filter((e) => (e.end ?? e.start) >= now)
@@ -151,8 +164,6 @@ export default function Calendar() {
           <span className="cal-keys dim">h/l: ay · t: bugün</span>
         </div>
 
-        <p className="cal-rotate dim">↻ telefonu yan çevir, takvim tam sığsın</p>
-
         <div className="cal-scroll">
           <div className="cal-grid" role="grid" aria-label={`${MONTHS[month]} ${year}`}>
             {WEEKDAYS.map((w) => (
@@ -160,10 +171,30 @@ export default function Calendar() {
             ))}
             {shown.map((c) => {
               const events = byDay[c.day] ?? []
-              const cls = ['cal-day', !c.inMonth && 'is-out', c.day === today && 'is-today', c.day < today && 'is-past']
+              const cls = [
+                'cal-day',
+                !c.inMonth && 'is-out',
+                c.day === today && 'is-today',
+                c.day < today && 'is-past',
+                c.day === selected && 'is-selected',
+              ]
               return (
-                <div key={c.day} className={cls.filter(Boolean).join(' ')} role="gridcell" aria-label={longDate(c.day)}>
+                <div
+                  key={c.day}
+                  className={cls.filter(Boolean).join(' ')}
+                  role="gridcell"
+                  aria-label={longDate(c.day)}
+                  aria-selected={c.day === selected}
+                  onClick={() => setPicked(c.day)}
+                >
                   <span className="cal-n">{c.n}</span>
+                  {events.length > 0 && (
+                    <span className="cal-dots" aria-hidden="true">
+                      {events.slice(0, 3).map((e) => (
+                        <i key={e.id} style={{ background: typeOf(e).color }} />
+                      ))}
+                    </span>
+                  )}
                   {events.map((e) => (
                     <button
                       key={e.id}
@@ -181,6 +212,26 @@ export default function Calendar() {
             })}
           </div>
         </div>
+
+        <section className="cal-dayview" aria-live="polite">
+          <h2>{longDate(selected)}</h2>
+          {selectedEvents.length === 0 && <p className="dim">bu gün etkinlik yok.</p>}
+          {selectedEvents.map((e) => (
+            <button key={e.id} className="cal-dv-ev" style={{ '--c': typeOf(e).color }} onClick={() => setOpen(e)}>
+              <span className="cal-dv-time">
+                {dayOf(e.start) === selected ? timeOf(e.start) : 'devam'}
+                {e.end && dayOf(e.end) === selected && <span className="dim">–{timeOf(e.end)}</span>}
+              </span>
+              <span className="cal-dv-main">
+                <span className="cal-dv-title">{e.title}</span>
+                <span className="dim">
+                  {typeOf(e).label}
+                  {e.place && ` · ${e.place}`}
+                </span>
+              </span>
+            </button>
+          ))}
+        </section>
 
         <section className="cal-up">
           <h2>yaklaşan etkinlikler</h2>

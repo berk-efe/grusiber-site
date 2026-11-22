@@ -345,7 +345,9 @@ a { color: var(--accent); }
 .cal-legend { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 12px; letter-spacing: 0.05em; }
 .cal-legend i { display: inline-block; width: 8px; height: 8px; margin-right: 8px; }
 .cal-keys { margin-left: auto; }
-.cal-rotate { display: none; font-size: 12px; }
+
+/* dots + day list: the phone month view (hidden on wider screens) */
+.cal-dots, .cal-dayview { display: none; }
 
 .cal-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--dim) transparent; }
 .cal-grid {
@@ -473,9 +475,66 @@ a { color: var(--accent); }
   margin: auto auto 0;
 }
 
-/* phone held upright: the grid scrolls sideways, suggest turning it */
-@media (max-width: 760px) and (orientation: portrait) {
-  .cal-rotate { display: block; }
+/* phone held upright: compact month like phone calendar apps. Days show
+   colored dots; tapping a day lists its events under the grid. */
+@media (max-width: 640px) {
+  .cal-grid { min-width: 0; border: 0; }
+  .cal-wd, .cal-day { border: 0; }
+  .cal-wd { text-align: center; padding: 4px 0 8px; letter-spacing: 0.05em; }
+  .cal-day {
+    min-height: 0;
+    height: 52px;
+    padding: 4px 0;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cal-day.is-out { background: none; }
+  .cal-day.is-out .cal-n { opacity: 0.5; }
+  .cal-day.is-today { outline: 0; }
+  .cal-n {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    font-size: 14px;
+    border: 1px solid transparent;
+  }
+  .cal-day.is-today .cal-n { align-self: center; }
+  .cal-day.is-selected .cal-n { border-color: var(--accent); }
+  .cal-ev { display: none; }
+  .cal-dots { display: flex; gap: 3px; height: 5px; }
+  .cal-dots i { width: 5px; height: 5px; border-radius: 50%; }
+  .cal-day.is-past .cal-dots { opacity: 0.5; }
+
+  .cal-dayview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid var(--dim);
+    padding-top: 14px;
+  }
+  .cal-dayview h2 { font-size: 13px; letter-spacing: 0.1em; color: var(--accent); }
+  .cal-dv-ev {
+    display: flex;
+    gap: 2ch;
+    text-align: left;
+    background: color-mix(in srgb, var(--c) 10%, transparent);
+    border: 0;
+    border-left: 3px solid var(--c);
+    color: var(--fg);
+    font: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .cal-dv-time { color: var(--c); flex: none; width: 7ch; display: flex; flex-direction: column; font-size: 13px; white-space: nowrap; }
+  .cal-dv-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 12px; }
+  .cal-dv-title { font-size: 15px; color: var(--fg); }
+  .cal-head { align-items: center; }
+  .cal-title { font-size: 40px; }
 }
 /* phone turned sideways: tighter cells so the whole month fits */
 @media (max-height: 500px) and (orientation: landscape) {
