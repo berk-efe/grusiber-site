@@ -14,20 +14,21 @@ function useUptime() {
   return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`
 }
 
-export default function Layout({ children, banner = false }) {
+export default function Layout({ children, banner = false, wide = false }) {
   const uptime = useUptime()
 
   return (
     <div className="page">
       {banner && <AnnounceBar />}
       <main className="screen fade-in">
-        <div className="frame">
+        <div className={wide ? 'frame frame-wide' : 'frame'}>
           <header className="topbar">
             <span>GRUSIBER</span>
             <nav className="nav">
               <NavLink to="/" end>~/</NavLink>
               <NavLink to="/about/">about/</NavLink>
               <NavLink to="/duyurular/">duyurular/</NavLink>
+              <NavLink to="/takvim/">takvim/</NavLink>
             </nav>
             <span className="dim">up {uptime}</span>
           </header>
