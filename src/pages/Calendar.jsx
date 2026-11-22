@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
-import { EVENTS, EVENT_TYPES } from '../events.js'
+import { EVENT_TYPES } from '../eventTypes.js'
+import { useApi } from '../api.js'
 
 const MONTHS = ['ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran', 'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık']
 const WEEKDAYS = ['pzt', 'sal', 'çar', 'per', 'cum', 'cmt', 'paz']
@@ -75,6 +76,8 @@ export default function Calendar() {
   const [params, setParams] = useSearchParams()
   const today = todayTR()
   const [open, setOpen] = useState(null)
+  const { data, error } = useApi('/api/events')
+  const events = useMemo(() => data ?? [], [data])
   const [picked, setPicked] = useState(null)
 
   // ?ay=2026-12 picks the month, so a month can be shared as a link
@@ -96,11 +99,11 @@ export default function Calendar() {
 
   const byDay = useMemo(() => {
     const map = {}
-    for (const e of [...EVENTS].sort((a, b) => a.start.localeCompare(b.start))) {
+    for (const e of [...events].sort((a, b) => a.start.localeCompare(b.start))) {
       for (const d of daysOf(e)) (map[d] ??= []).push(e)
     }
     return map
-  }, [])
+  }, [events])
 
   // 6 rows of Monday-first weeks covering the month
   const cells = useMemo(() => {
@@ -123,7 +126,7 @@ export default function Calendar() {
   const selectedEvents = byDay[selected] ?? []
 
   const now = nowTR()
-  const upcoming = EVENTS.filter((e) => (e.end ?? e.start) >= now)
+  const upcoming = events.filter((e) => (e.end ?? e.start) >= now)
     .sort((a, b) => a.start.localeCompare(b.start))
     .slice(0, UPCOMING)
 
@@ -235,7 +238,8 @@ export default function Calendar() {
 
         <section className="cal-up">
           <h2>yaklaşan etkinlikler</h2>
-          {upcoming.length === 0 && <p className="dim">şimdilik planlı etkinlik yok.</p>}
+          {error && !data && <p className="dim">etkinlikler yüklenemedi. sayfayı yenilemeyi dene.</p>}
+          {data && upcoming.length === 0 && <p className="dim">şimdilik planlı etkinlik yok.</p>}
           <ol>
             {upcoming.map((e) => (
               <li key={e.id}>

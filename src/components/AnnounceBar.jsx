@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ANNOUNCEMENTS } from '../announcements.js'
+import { useApi } from '../api.js'
 
 const key = (id) => `closed:${id}`
 
@@ -15,14 +15,16 @@ function wasClosed(id) {
 // Full-width strip at the top of the page. It sits in the normal flow, so it
 // pushes the page down instead of covering it.
 export default function AnnounceBar() {
-  const [item, setItem] = useState(() => ANNOUNCEMENTS.find((a) => a.banner && !wasClosed(a.id)))
+  const { data } = useApi('/api/announcements')
+  const [closed, setClosed] = useState(null)
+  const item = data?.find((a) => a.banner && a.id !== closed && !wasClosed(a.id))
   if (!item) return null
 
   const close = () => {
     try {
       localStorage.setItem(key(item.id), '1')
     } catch {}
-    setItem(null)
+    setClosed(item.id)
   }
 
   return (

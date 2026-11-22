@@ -1,11 +1,30 @@
 {
-  // Cloudflare Workers static assets config. `npm run deploy` builds and uploads dist/.
+  // Static files from dist/, plus worker/index.js for /api/* only.
   "previews": {},
   "name": "grusiber-site",
   "compatibility_date": "2026-10-01",
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
-    // Serve index.html for unknown paths so React Router handles /maintenance etc.
-    "not_found_handling": "single-page-application"
+    // Serve index.html for unknown paths so React Router handles /takvim etc.
+    "not_found_handling": "single-page-application",
+    // Everything else is served as a static file without running the worker.
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "grusiber",
+      // TODO: replace with the id from `npx wrangler d1 create grusiber`.
+      // Until then only local dev (`npm run dev:api`) works.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    // Cloudflare Access: team domain (xxx.cloudflareaccess.com) and the
+    // Application Audience (AUD) tag of the /admin application.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
   }
 }

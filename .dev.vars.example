@@ -1,0 +1,3 @@
+# Copy to .dev.vars for local development. The API then treats requests to
+# localhost as signed in with this email, without Cloudflare Access.
+DEV_ADMIN_EMAIL=admin@localhost
