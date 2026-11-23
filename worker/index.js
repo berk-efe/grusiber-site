@@ -4,6 +4,7 @@
 // check it here, so the API is safe even if someone reaches it directly.
 
 import { EVENT_TYPES } from '../src/eventTypes.js'
+import { GoError, handleGo } from './go.js'
 
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), {
@@ -55,6 +56,16 @@ const stripNulls = (row) => Object.fromEntries(Object.entries(row).filter(([, v]
 async function admin(request, env, path, who) {
   const m = request.method
   if (m === 'GET' && path === '/me') return json({ email: who })
+
+  // go.grusiber.com links and QR codes
+  if (path === '/go' || path.startsWith('/go/')) {
+    try {
+      return json(await handleGo(request, env, path.slice(3), new URL(request.url)), m === 'POST' ? 201 : 200, { 'cache-control': 'no-store' })
+    } catch (e) {
+      if (e instanceof GoError) return json({ error: e.message, ...e.extra }, e.status)
+      throw e
+    }
+  }
 
   let match
   if ((match = /^\/(events|announcements)(?:\/([\w-]+))?$/.exec(path))) {

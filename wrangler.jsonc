@@ -19,8 +19,17 @@
       // Until then only local dev (`npm run dev:api`) works.
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "migrations"
+    },
+    {
+      "binding": "GO_DB",
+      "database_name": "grusiber-go-db",
+      "database_id": "c800452e-67d7-4903-b862-aa040f397b06",
+      "migrations_dir": "migrations-go"
     }
   ],
+  // go.grusiber.com data: the go worker redirects from LINKS and logs scans
+  // into grusiber-go-db; this site's /admin manages both.
+  "kv_namespaces": [{ "binding": "LINKS", "id": "458dc7ac669549b789c069c503b94275" }],
   "vars": {
     // Cloudflare Access: team domain (xxx.cloudflareaccess.com) and the
     // Application Audience (AUD) tag of the /admin application.

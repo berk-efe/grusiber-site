@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Layout from '../components/Layout.jsx'
-import { EVENT_TYPES } from '../eventTypes.js'
-import { adminApi } from '../api.js'
+import Layout from '../../components/Layout.jsx'
+import { EVENT_TYPES } from '../../eventTypes.js'
+import { adminApi } from '../../api.js'
+import { normalize } from '../../qr/style.js'
+import Links from './Links.jsx'
+import QrGen from './QrGen.jsx'
+import { goApi } from './qrUtil.js'
+
+const TABS = [
+  ['events', 'etkinlikler'],
+  ['announcements', 'duyurular'],
+  ['links', 'linkler'],
+  ['qr', 'qr üretici'],
+]
 
 // /admin: add, edit and delete events and announcements. Cloudflare Access
 // guards this page and /api/admin; the worker checks the login on every write.
@@ -15,7 +26,21 @@ const emptyAnnouncement = () => ({ date: todayTR(), title: '', body: '', banner:
 export default function Admin() {
   const [me, setMe] = useState(null)
   const [authError, setAuthError] = useState(null)
-  const [tab, setTab] = useState('events')
+  const [tab, setTab] = useState(() => {
+    try {
+      const t = sessionStorage.getItem('adminTab')
+      return TABS.some(([k]) => k === t) ? t : 'events'
+    } catch {
+      return 'events'
+    }
+  })
+  const pick = (t) => {
+    setTab(t)
+    try {
+      sessionStorage.setItem('adminTab', t)
+    } catch {}
+  }
+  const go = useGoShared(!!me && (tab === 'links' || tab === 'qr'))
 
   useEffect(() => {
     adminApi('GET', '/me')
@@ -37,12 +62,11 @@ export default function Admin() {
             )}
           </p>
           <nav className="adm-tabs">
-            <button className={tab === 'events' ? 'is-on' : ''} onClick={() => setTab('events')}>
-              etkinlikler
-            </button>
-            <button className={tab === 'announcements' ? 'is-on' : ''} onClick={() => setTab('announcements')}>
-              duyurular
-            </button>
+            {TABS.map(([k, label]) => (
+              <button key={k} className={tab === k ? 'is-on' : ''} onClick={() => pick(k)}>
+                {label}
+              </button>
+            ))}
           </nav>
         </header>
 
@@ -55,14 +79,48 @@ export default function Admin() {
           </div>
         ) : !me ? (
           <p className="dim">bağlanıyor...</p>
-        ) : tab === 'events' ? (
-          <Editor key="events" kind="events" />
+        ) : tab === 'events' || tab === 'announcements' ? (
+          <Editor key={tab} kind={tab} />
+        ) : go.error ? (
+          <p className="adm-err">go verisi yüklenemedi: {go.error}</p>
+        ) : !go.ready ? (
+          <p className="dim">yükleniyor...</p>
+        ) : tab === 'links' ? (
+          <Links go={go} />
         ) : (
-          <Editor key="announcements" kind="announcements" />
+          <QrGen go={go} />
         )}
       </section>
     </Layout>
   )
+}
+
+// Logos and the default QR style, shared by the links and qr tabs. Loaded
+// the first time one of those tabs opens.
+function useGoShared(active) {
+  const [logos, setLogos] = useState([])
+  const [defaultDesign, setDefaultDesign] = useState(() => normalize({}))
+  const [ready, setReady] = useState(false)
+  const [error, setError] = useState(null)
+  const [started, setStarted] = useState(false)
+
+  useEffect(() => {
+    if (!active || started) return
+    setStarted(true)
+    Promise.all([goApi('GET', '/settings'), goApi('GET', '/logos')])
+      .then(([s, l]) => {
+        if (s.default_design) setDefaultDesign(normalize(s.default_design))
+        setLogos(l.logos)
+        setReady(true)
+      })
+      .catch((e) => setError(e.message))
+  }, [active, started])
+
+  const saveDefault = async (design) => {
+    await goApi('PUT', '/settings', { default_design: design })
+    setDefaultDesign(normalize(design))
+  }
+  return { logos, setLogos, defaultDesign, saveDefault, ready, error }
 }
 
 function Editor({ kind }) {

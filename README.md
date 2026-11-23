@@ -21,12 +21,16 @@ static file and never runs the worker (`run_worker_first` in `wrangler.jsonc`).
 - `/api/admin/*`: add, edit, delete. Needs a Cloudflare Access login; the worker checks the
   Access JWT against `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD`.
 - `/admin`: the editor page. Not linked from the site.
+- `/api/admin/go/*` (`worker/go.js`): go.grusiber.com short links, QR designer, static QR
+  library and scan stats. The worker binds the go worker's KV (`LINKS`) and D1 (`GO_DB`,
+  schema in `migrations-go/`); the go worker itself only redirects and logs scans.
 
 Local development, no Cloudflare account needed:
 
 ```sh
 cp .dev.vars.example .dev.vars   # makes localhost count as signed in
 npm run db:migrate:local         # creates the tables in .wrangler/
+npm run db:go:migrate:local      # same for the go.grusiber.com database
 npm run db:seed:local            # sample events (made up, local only)
 npm run build && npm run dev:api # worker on :8787
 npm run dev                      # site on :5173, /api is proxied to :8787

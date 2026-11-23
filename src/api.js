@@ -33,7 +33,7 @@ export async function adminApi(method, path, body) {
     credentials: 'same-origin',
   })
   const data = await r.json().catch(() => ({}))
-  if (!r.ok) throw Object.assign(new Error(data.error || `HTTP ${r.status}`), { status: r.status })
+  if (!r.ok) throw Object.assign(new Error(data.error || `HTTP ${r.status}`), { status: r.status, data })
   // the public lists changed: drop them so the next visit refetches
   cache.clear()
   return data
