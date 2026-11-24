@@ -2,6 +2,7 @@
   // Static files from dist/, plus worker/index.js for /api/* only.
   "previews": {},
   "name": "grusiber-site",
+  "account_id": "ad43af0086435902e96b6f4a3e235c20",
   "compatibility_date": "2026-10-01",
   "main": "worker/index.js",
   "assets": {
@@ -15,9 +16,7 @@
     {
       "binding": "DB",
       "database_name": "grusiber",
-      // TODO: replace with the id from `npx wrangler d1 create grusiber`.
-      // Until then only local dev (`npm run dev:api`) works.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "7f16c9a5-4ec9-4dc3-80ec-8eea86f237f6",
       "migrations_dir": "migrations"
     },
     {
