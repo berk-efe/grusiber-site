@@ -1,6 +1,18 @@
 {
   // Static files from dist/, plus worker/index.js for /api/* only.
-  "previews": {},
+  // Previews (the dev branch) don't inherit bindings or vars from the top
+  // level, so they are repeated here. They point at the same real data.
+  "previews": {
+    "d1_databases": [
+      { "binding": "DB", "database_name": "grusiber", "database_id": "7f16c9a5-4ec9-4dc3-80ec-8eea86f237f6", "migrations_dir": "migrations" },
+      { "binding": "GO_DB", "database_name": "grusiber-go-db", "database_id": "c800452e-67d7-4903-b862-aa040f397b06", "migrations_dir": "migrations-go" }
+    ],
+    "kv_namespaces": [{ "binding": "LINKS", "id": "458dc7ac669549b789c069c503b94275" }],
+    "vars": {
+      "ACCESS_TEAM_DOMAIN": "berk-efe.cloudflareaccess.com",
+      "ACCESS_AUD": "796860692d12fbf50e209a4b7146b363a12d80c59bdce85aca4574f911f2eb31"
+    }
+  },
   "name": "grusiber-site",
   "account_id": "ad43af0086435902e96b6f4a3e235c20",
   "compatibility_date": "2026-10-01",
