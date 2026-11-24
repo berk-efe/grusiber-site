@@ -1,10 +1,50 @@
 {
-  // Cloudflare Workers static assets config. `npm run deploy` builds and uploads dist/.
+  // Static files from dist/, plus worker/index.js for /api/* only.
+  // Previews (the dev branch) don't inherit bindings or vars from the top
+  // level, so they are repeated here. They point at the same real data.
+  "previews": {
+    "d1_databases": [
+      { "binding": "DB", "database_name": "grusiber", "database_id": "7f16c9a5-4ec9-4dc3-80ec-8eea86f237f6", "migrations_dir": "migrations" },
+      { "binding": "GO_DB", "database_name": "grusiber-go-db", "database_id": "c800452e-67d7-4903-b862-aa040f397b06", "migrations_dir": "migrations-go" }
+    ],
+    "kv_namespaces": [{ "binding": "LINKS", "id": "458dc7ac669549b789c069c503b94275" }],
+    "vars": {
+      "ACCESS_TEAM_DOMAIN": "berk-efe.cloudflareaccess.com",
+      "ACCESS_AUD": "796860692d12fbf50e209a4b7146b363a12d80c59bdce85aca4574f911f2eb31"
+    }
+  },
   "name": "grusiber-site",
+  "account_id": "ad43af0086435902e96b6f4a3e235c20",
   "compatibility_date": "2026-10-01",
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
-    // Serve index.html for unknown paths so React Router handles /maintenance etc.
-    "not_found_handling": "single-page-application"
+    // Serve index.html for unknown paths so React Router handles /takvim etc.
+    "not_found_handling": "single-page-application",
+    // Everything else is served as a static file without running the worker.
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "grusiber",
+      "database_id": "7f16c9a5-4ec9-4dc3-80ec-8eea86f237f6",
+      "migrations_dir": "migrations"
+    },
+    {
+      "binding": "GO_DB",
+      "database_name": "grusiber-go-db",
+      "database_id": "c800452e-67d7-4903-b862-aa040f397b06",
+      "migrations_dir": "migrations-go"
+    }
+  ],
+  // go.grusiber.com data: the go worker redirects from LINKS and logs scans
+  // into grusiber-go-db; this site's /admin manages both.
+  "kv_namespaces": [{ "binding": "LINKS", "id": "458dc7ac669549b789c069c503b94275" }],
+  "vars": {
+    // Cloudflare Access: team domain (xxx.cloudflareaccess.com) and the
+    // Application Audience (AUD) tag of the /admin application.
+    "ACCESS_TEAM_DOMAIN": "berk-efe.cloudflareaccess.com",
+    "ACCESS_AUD": "796860692d12fbf50e209a4b7146b363a12d80c59bdce85aca4574f911f2eb31"
   }
 }

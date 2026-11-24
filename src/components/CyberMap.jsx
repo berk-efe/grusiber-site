@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { LAND, MAP } from './worldmap.js'
+import { SPOTS } from './countries.js'
 
-// A live-looking threat map. The attacks are made up (random city pairs), so
-// the header says SİMÜLASYON; there is no real feed behind it.
+// Threat map fed by Cloudflare Radar (/api/threats: the top origin -> target
+// country pairs of the last 24 hours per attack type, with their share of all
+// layer 7 attacks). Arcs are drawn at random with those weights, so what flows
+// across the map follows the real mix; one arc is not one attack.
+// If the feed can't be loaded, it falls back to random city pairs and the
+// header says SİMÜLASYON.
 
 const CITIES = [
   ['giresun', 40.91, 38.39],
@@ -42,12 +47,15 @@ const CITIES = [
   ['buenos aires', -34.6, -58.38],
 ]
 
+// keys are Radar's mitigation products
 const TYPES = [
-  { key: 'DDOS', color: '#ff2bd6' },
-  { key: 'MALWARE', color: '#ffb000' },
-  { key: 'PHISHING', color: '#00e5ff' },
-  { key: 'SCAN', color: '#00ff9c' },
+  { key: 'DDOS', label: 'DDOS', color: '#ff2bd6' },
+  { key: 'WAF', label: 'WAF', color: '#ffb000' },
+  { key: 'BOT_MANAGEMENT', label: 'BOT', color: '#00e5ff' },
+  { key: 'IP_REPUTATION', label: 'IP REP', color: '#00ff9c' },
 ]
+const TYPE = Object.fromEntries(TYPES.map((t) => [t.key, t]))
+const REFRESH = 10 * 60 * 1000
 
 const FEED_LEN = 6
 const pick = (a) => a[Math.floor(Math.random() * a.length)]
@@ -57,6 +65,82 @@ function project(lat, lon, w, h) {
   const bottom = MAP.top - MAP.rows * MAP.step
   return [((lon + 180) / 360) * w, ((MAP.top - lat) / (MAP.top - bottom)) * h]
 }
+
+// a spot in the country, nudged a little so arcs don't stack on one pixel
+function spot(code) {
+  const [lat, lon] = pick(SPOTS[code])
+  return [lat + (Math.random() - 0.5) * 1.5, lon + (Math.random() - 0.5) * 1.5]
+}
+
+// weighted random pick; items need a numeric `w`
+function table(items) {
+  let sum = 0
+  const cum = items.map((it) => (sum += it.w))
+  return { items, cum, sum }
+}
+
+function draw(t) {
+  const r = Math.random() * t.sum
+  let lo = 0, hi = t.cum.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (t.cum[mid] < r) lo = mid + 1
+    else hi = mid
+  }
+  return t.items[lo]
+}
+
+// Turn the API answer into sampling tables. DDoS has real origin -> target
+// pairs; the other types only have origin and target lists, drawn separately.
+function prepare(data) {
+  const known = (code) => !!SPOTS[code]
+  const types = []
+  for (const t of data?.types || []) {
+    if (!TYPE[t.key] || !(t.share > 0)) continue
+    const pairs = (t.pairs || []).filter(
+      (p) => known(p.from) && known(p.to) && (p.from !== p.to || SPOTS[p.from].length > 1),
+    )
+    const origins = (t.origins || []).filter((p) => known(p.code))
+    const targets = (t.targets || []).filter((p) => known(p.code))
+    if (pairs.length) types.push({ w: t.share, key: t.key, pairs: table(pairs.map((p) => ({ ...p, w: p.value }))) })
+    else if (origins.length && targets.length)
+      types.push({
+        w: t.share,
+        key: t.key,
+        origins: table(origins.map((p) => ({ ...p, w: p.value }))),
+        targets: table(targets.map((p) => ({ ...p, w: p.value }))),
+      })
+  }
+  return types.length ? table(types) : null
+}
+
+function sample(live) {
+  const t = draw(live)
+  if (t.pairs) return { type: t.key, ...draw(t.pairs) }
+  const o = draw(t.origins)
+  let d = draw(t.targets)
+  // a few tries to avoid a same-country arc when the country has one hub
+  for (let i = 0; i < 4 && d.code === o.code && SPOTS[o.code].length < 2; i++) d = draw(t.targets)
+  return { type: t.key, from: o.code, fromName: o.name, to: d.code, toName: d.name }
+}
+
+// Radar's official names, shortened where they are long
+const SHORT = {
+  'Russian Federation': 'russia',
+  'United States': 'usa',
+  'United Kingdom': 'uk',
+  'United Arab Emirates': 'uae',
+  'Korea, Republic of': 'south korea',
+  'Republic of Korea': 'south korea',
+  "Korea, Democratic People's Republic of": 'north korea',
+  'Iran, Islamic Republic of': 'iran',
+  'Viet Nam': 'vietnam',
+  'Taiwan, Province of China': 'taiwan',
+  'Moldova, Republic of': 'moldova',
+  'Netherlands': 'netherlands',
+  'Türkiye': 'türkiye',
+}
+const place = (name, code) => SHORT[name] || (name || code).toLowerCase()
 
 function clock(d = new Date()) {
   return d.toTimeString().slice(0, 8)
@@ -68,6 +152,29 @@ export default function CyberMap() {
   const [feed, setFeed] = useState([])
   const [counts, setCounts] = useState(() => Object.fromEntries(TYPES.map((t) => [t.key, 0])))
   const [now, setNow] = useState(clock)
+  const live = useRef(null)
+  const [radar, setRadar] = useState(null)
+
+  useEffect(() => {
+    let stop = false
+    const load = () =>
+      fetch('/api/threats')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (stop) return
+          const ready = prepare(data)
+          if (!ready) return
+          live.current = ready
+          setRadar({ updated: data.updated, share: Object.fromEntries(data.types.map((t) => [t.key, t.share])) })
+        })
+        .catch(() => {})
+    load()
+    const t = setInterval(load, REFRESH)
+    return () => {
+      stop = true
+      clearInterval(t)
+    }
+  }, [])
 
   useEffect(() => {
     const t = setInterval(() => setNow(clock()), 1000)
@@ -85,7 +192,7 @@ export default function CyberMap() {
     let w = 0, h = 0, cities = []
     let attacks = []
     let rings = []
-    let raf, last = 0, nextSpawn = 0
+    let raf, last = 0, nextSpawn = 0, nextFeed = 0
     let visible = true
 
     const resize = () => {
@@ -115,10 +222,22 @@ export default function CyberMap() {
     }
 
     const spawn = (t) => {
-      const type = pick(TYPES)
-      const to = Math.random() < 0.2 ? cities[0] : pick(cities)
-      let from = pick(cities)
-      while (from === to) from = pick(cities)
+      let type, from, to
+      if (live.current) {
+        const p = sample(live.current)
+        type = TYPE[p.type]
+        const start = spot(p.from)
+        from = { name: place(p.fromName, p.from), ll: start, xy: project(...start, w, h) }
+        let end = spot(p.to)
+        // inside one country: make sure the arc doesn't start and end at the same hub
+        for (let i = 0; i < 8 && p.from === p.to && Math.hypot(end[0] - from.ll[0], end[1] - from.ll[1]) < 4; i++) end = spot(p.to)
+        to = { name: place(p.toName, p.to), xy: project(...end, w, h) }
+      } else {
+        type = pick(TYPES)
+        to = Math.random() < 0.2 ? cities[0] : pick(cities)
+        from = pick(cities)
+        while (from === to) from = pick(cities)
+      }
       const [x1, y1] = from.xy
       const [x2, y2] = to.xy
       const lift = Math.hypot(x2 - x1, y2 - y1) * 0.35
@@ -130,7 +249,11 @@ export default function CyberMap() {
         dur: 1100 + Math.random() * 900,
       })
       setCounts((c) => ({ ...c, [type.key]: c[type.key] + 1 }))
-      setFeed((f) => [{ id: t + Math.random(), time: clock(), type, from: from.name, to: to.name }, ...f].slice(0, FEED_LEN))
+      // the map is busier than anyone can read, so the list takes a sample
+      if (t >= nextFeed) {
+        nextFeed = t + 350
+        setFeed((f) => [{ id: t + Math.random(), time: clock(), type, from: from.name, to: to.name }, ...f].slice(0, FEED_LEN))
+      }
     }
 
     const at = (a, t) => {
@@ -207,7 +330,7 @@ export default function CyberMap() {
       last = t
       if (t >= nextSpawn) {
         spawn(t)
-        nextSpawn = t + 80 + Math.random() * 280
+        nextSpawn = t + 25 + Math.random() * 90
       }
       draw(t)
     }
@@ -233,17 +356,18 @@ export default function CyberMap() {
     <section className="cmap">
       <div className="cmap-bar">
         <span>THREATMAP</span>
-        <span className="cmap-sim">[ SİMÜLASYON ]</span>
+        <span className="cmap-sim">{radar ? '[ CANLI ]' : '[ SİMÜLASYON ]'}</span>
         <span className="dim">{now}</span>
       </div>
       <div ref={wrap} className="cmap-canvas">
-        <canvas ref={ref} aria-label="simüle edilmiş saldırı haritası" role="img" />
+        <canvas ref={ref} aria-label="saldırı haritası" role="img" />
       </div>
       <div className="cmap-legend">
         {TYPES.map((t) => (
           <span key={t.key}>
             <i style={{ background: t.color }} />
-            {t.key} <span className="dim">{counts[t.key]}</span>
+            {t.label}{' '}
+            <span className="dim">{radar ? `%${(radar.share[t.key] || 0).toFixed(1)}` : counts[t.key]}</span>
           </span>
         ))}
       </div>
@@ -251,13 +375,22 @@ export default function CyberMap() {
         {feed.map((e) => (
           <li key={e.id}>
             <span className="dim">{e.time}</span>
-            <span style={{ color: e.type.color }}>{e.type.key.padEnd(8)}</span>
+            <span style={{ color: e.type.color }}>{e.type.label.padEnd(8)}</span>
             <span>
               {e.from} <span className="dim">→</span> {e.to}
             </span>
           </li>
         ))}
       </ol>
+      {radar && (
+        <div className="cmap-src dim">
+          veri:{' '}
+          <a href="https://radar.cloudflare.com/security/application-layer" target="_blank" rel="noreferrer">
+            cloudflare radar
+          </a>{' '}
+          · son 24 saat · cc by-nc 4.0 · oklar gerçek dağılımdan örneklenir
+        </div>
+      )}
     </section>
   )
 }

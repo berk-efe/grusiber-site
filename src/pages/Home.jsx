@@ -45,7 +45,7 @@ export default function Home() {
   return (
     <>
       <TorusBg />
-      <Layout>
+      <Layout banner>
       <section className="hero">
         <h1 className="glitch" data-text="HELLO, WORLD">
           <Scramble text="HELLO, WORLD" duration={1100} delay={250} />
