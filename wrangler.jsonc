@@ -32,7 +32,7 @@
   "vars": {
     // Cloudflare Access: team domain (xxx.cloudflareaccess.com) and the
     // Application Audience (AUD) tag of the /admin application.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
+    "ACCESS_TEAM_DOMAIN": "berk-efe.cloudflareaccess.com",
+    "ACCESS_AUD": "796860692d12fbf50e209a4b7146b363a12d80c59bdce85aca4574f911f2eb31"
   }
 }
