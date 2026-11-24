@@ -5,6 +5,7 @@
 
 import { EVENT_TYPES } from '../src/eventTypes.js'
 import { GoError, handleGo } from './go.js'
+import { handleThreats } from './threats.js'
 
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), {
@@ -16,11 +17,12 @@ const fail = (status, error) => json({ error }, status)
 class Bad extends Error {}
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url)
     const path = url.pathname.replace(/\/+$/, '')
     try {
       if (request.method === 'GET' && path === '/api/events') return json(await listEvents(env), 200, PUBLIC_CACHE)
+      if (request.method === 'GET' && path === '/api/threats') return await handleThreats(request, env, ctx)
       if (request.method === 'GET' && path === '/api/announcements') return json(await listAnnouncements(env), 200, PUBLIC_CACHE)
 
       if (path === '/api/admin' || path.startsWith('/api/admin/')) {
